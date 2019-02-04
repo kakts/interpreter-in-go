@@ -1,6 +1,6 @@
 package lexer
 
-import "interpreter-in-go/token"
+import "github.com/kakts/monkey/token"
 
 type Lexer struct {
 	input        string
@@ -38,7 +38,7 @@ func (l *Lexer) NextToken() token.Token {
 	case '=':
 		tok = newToken(token.ASSIGN, l.ch)
 	case ';':
-		tok = newToken(token.ASSIGN, l.ch)
+		tok = newToken(token.SEMICOLON, l.ch)
 	case '(':
 		tok = newToken(token.LPAREN, l.ch)
 	case ')':
@@ -62,8 +62,5 @@ func (l *Lexer) NextToken() token.Token {
 }
 
 func newToken(tokenType token.TokenType, ch byte) token.Token {
-	return token.Token{
-		Type: tokenType,
-		Literal: string(ch)
-	}
+	return token.Token{Type: tokenType, Literal: string(ch)}
 }
