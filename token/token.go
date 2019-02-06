@@ -32,3 +32,17 @@ type Token struct {
 	Type    TokenType
 	Literal string
 }
+
+var keywords = map[string]TokenType{
+	"fn": FUNCTION,
+	"let": LET,
+}
+
+// keywordsテーブルをチェックして 渡された識別子が実はキーワードでなかったかチェック
+// そうであれば キーワードのTokenTypeを返す
+func LookupIdent(ident string) TokenType {
+	if tok, ok := keywords[ident]; ok {
+		return tok
+	}
+	return IDENT
+}
