@@ -32,7 +32,7 @@ func (l *Lexer) readChar() {
 	}
 
 	l.position = l.readPosition
-	l.readPosition += 1
+	l.readPosition++
 }
 
 func isLetter(ch byte) bool {
@@ -43,11 +43,8 @@ func (l *Lexer) readIdentifier() string {
 	position := l.position
 	// 文字が続くまでよみすすめる
 	for isLetter(l.ch) {
-		fmt.Print("-a-")
-		fmt.Println(l.ch)
 		l.readChar()
 	}
-	fmt.Println(l.input[position:l.position])
 	return l.input[position:l.position]
 }
 
@@ -61,7 +58,6 @@ func (l *Lexer) readNumber() string {
 	for isDigit(l.ch) {
 		l.readChar()
 	}
-
 	return l.input[position:l.position]
 }
 
@@ -74,10 +70,9 @@ func (l *Lexer) skipWhitespace() {
 
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
-
 	// ホワイトスペースはスキップさせる
 	l.skipWhitespace()
-	
+
 	switch l.ch {
 	case '=':
 		fmt.Println("=!")
@@ -104,16 +99,13 @@ func (l *Lexer) NextToken() token.Token {
 	default:
 		// l.chが認識された文字でないときに識別子かどうかを点検する
 		if isLetter(l.ch) {
-			fmt.Println("letter")
 			tok.Literal = l.readIdentifier()
 			tok.Type = token.LookupIdent(tok.Literal)
-			fmt.Println(tok.Literal)
 			return tok
 		} else if isDigit(l.ch) {
-			fmt.Println("nume")
 			tok.Type = token.INT
 			tok.Literal = l.readNumber()
-		
+			return tok
 		} else {
 			// 対象の文字をどのようにして扱えばいいかわからない場合
 			tok = newToken(token.ILLEGAL, l.ch)
