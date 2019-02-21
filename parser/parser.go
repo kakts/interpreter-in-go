@@ -8,12 +8,33 @@ import (
 	"github.com/kakts/monkey/token"
 )
 
+const (
+	_ int = iota
+	LOWEST
+	EQUALS
+	LESSGREATER
+	SUM
+	PRODUCT
+	PREFIX
+	CALL
+)
+
+// 前置(prefix)と中置(infix)で異なる構文解析を定義する
+// infixの引数は 中置演算子の左側
+type (
+	prefixParseFn func() ast.Expression
+	infixParseFn func(ast.Expression) ast.Expression
+)
+
 type Parser struct {
 	l *lexer.Lexer
 
 	curToken token.Token
 	peekToken token.Token
 	errors []string
+
+	prefixParseFns map[token.TokenType]prefixParseFn
+	infixParseFns map[token.TokenType]infixParseFn
 }
 
 func New(l *lexer.Lexer) *Parser {
@@ -70,7 +91,8 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.RETURN:
 			return p.parseReturnStatement()
 	default:
-			return nil
+			// 式文として評価
+			return p.parseExpressionStatement()
 	}
 }
 
@@ -125,4 +147,30 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	}
 
 	return stmt
+}
+
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	stmt := &ast.ExpressionStatement{
+		Token: p.curToken,
+	}
+	stmt.Expression = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+	return stmt
+}
+
+/**
+ * 前置演算子の関数を登録する
+ */
+func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+	p.prefixParseFns[tokenType] = fn
+}
+
+/**
+ * 中置演算子の関数を登録する
+ */
+func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+	p.infixParseFns[tokenType] = fn
 }
