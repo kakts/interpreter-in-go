@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/kakts/monkey/ast"
 	"github.com/kakts/monkey/lexer"
@@ -42,6 +43,11 @@ func New(l *lexer.Lexer) *Parser {
 		l: l,
 		errors: []string{},
 	}
+
+	// ParserのprefixParseFnsマップを初期化し、構文解析関数を登録する
+	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
+	p.registerPrefix(token.IDENT, p.parseIdentifier)
+	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 
 	// 2つのトークンを読み込む
 	p.nextToken()
@@ -173,4 +179,43 @@ func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
  */
 func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
 	p.infixParseFns[tokenType] = fn
+}
+
+/**
+ * p.curToken.Type に関連づけられた構文解析関数があるかを確認する
+ */
+func (p *Parser) parseExpression(precedence int) ast.Expression {
+	prefix := p.prefixParseFns[p.curToken.Type]
+	if prefix == nil {
+		return nil
+	}
+	leftExp := prefix()
+
+	return leftExp
+}
+
+/**
+ * 現在のトークン・リテラル値を取得する
+ */ 
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{
+		Token: p.curToken,
+		Value: p.curToken.Literal,
+	}
+}
+
+func (p *Parser) parseIntegerLiteral() ast.Expression {
+	lit := &ast.IntegerLiteral{
+		Token: p.curToken,
+	}
+	// intに変換
+	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
+	if err != nil {
+		msg := fmt.Sprintf("could not parse %q as integer", p.curToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	lit.Value = value
+
+	return lit
 }
