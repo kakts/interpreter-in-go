@@ -48,12 +48,29 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
+	p.registerPrefix(token.BANG, p.parsePrefixExpression)
+	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
 
 	// 2つのトークンを読み込む
 	p.nextToken()
 	p.nextToken()
 
 	return p
+}
+
+func (p *Parser) parsePrefixExpression() ast.Expression {
+	expression := &ast.PrefixExpression {
+		Token: p.curToken,
+		Operator: p.curToken.Literal,
+	}
+
+	// トークンを進める
+	p.nextToken()
+
+	// 前置演算子から１つ進めた上でRightに格納する
+	expression.Right = p.parseExpression(PREFIX)
+
+	return expression
 }
 
 func (p *Parser) Errors() []string {
