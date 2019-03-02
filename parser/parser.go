@@ -240,6 +240,8 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 	// 
 	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
+		// 先読みして次のトークンに紐付いたinfixParseFnを確認する
+		// なければleftExpを返す
 		infix := p.infixParseFns[p.peekToken.Type]
 		if infix == nil {
 			return leftExp
