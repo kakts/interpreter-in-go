@@ -238,7 +238,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 	leftExp := prefix()
 
-	// 
+	// 一個先のトークンのほうが優先度が高い間はループが続く
 	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
 		// 先読みして次のトークンに紐付いたinfixParseFnを確認する
 		// なければleftExpを返す
@@ -247,6 +247,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 			return leftExp
 		}
 
+		// leftExpに保存する前にトークンを進める
 		p.nextToken()
 
 		leftExp = infix(leftExp)
