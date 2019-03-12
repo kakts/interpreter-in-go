@@ -70,6 +70,9 @@ func New(l *lexer.Lexer) *Parser {
 	// かっこの場合かっこで閉じられた箇所をグループ化する
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 
+	// if/else文
+	p.registerPrefix(token.IF, p.parseIfExpression)
+
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
@@ -222,6 +225,64 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 		p.nextToken()
 	}
 	return stmt
+}
+
+func (p *Parser) parseIfExpression() ast.Expression {
+	expression := &ast.IfExpression{
+		Token: p.curToken,
+	}
+
+	if !p.expectPeek(token.LPAREN) {
+		return nil
+	}
+	p.nextToken()
+	// 条件式
+	expression.Condition = p.parseExpression(LOWEST)
+
+	// 条件式の次は閉じかっこ
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	// 中カッコ{
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+
+	// if がtrueの場合の処理 ブロック文をパースする
+	expression.Consequence = p.parseBlockStatement()
+
+	// elseが存在する場合　else部の対応
+	if p.peekTokenIs(token.ELSE) {
+		p.nextToken()
+
+		if !p.expectPeek(token.LBRACE) {
+			return nil
+		}
+
+		expression.Alternative = p.parseBlockStatement()
+	}
+
+	return expression
+}
+
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	block := &ast.BlockStatement{
+		Token: p.curToken,
+	}
+	block.Statements = []ast.Statement{}
+
+	p.nextToken()
+
+	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
+		stmt := p.parseStatement()
+		if stmt != nil {
+			block.Statements = append(block.Statements, stmt)
+		}
+		p.nextToken()
+	}
+
+	return block
 }
 
 /**
