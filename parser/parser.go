@@ -31,6 +31,7 @@ var precedences = map[token.TokenType]int {
 	token.MINUS:    SUM,
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
+	token.LPAREN:   CALL,
 }
 
 // 前置(prefix)と中置(infix)で異なる構文解析を定義する
@@ -85,6 +86,9 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.NOT_EQ, p.parseInfixExpression)
 	p.registerInfix(token.LT, p.parseInfixExpression)
 	p.registerInfix(token.GT, p.parseInfixExpression)
+
+	// 関数の呼び出し式　add(2, 3)として　LPARENに対するinfixParseFnを登録する
+	p.registerInfix(token.LPAREN, p.parseCallExpression)
 
 	// 2つのトークンを読み込む
 	p.nextToken()
@@ -459,4 +463,40 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 	}
 
 	return identifiers
+}
+
+// 関数呼び出し式のパース
+func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
+	exp := &ast.CallExpression{Token: p.curToken, Function: function}
+	exp.Arguments = p.parseCallArguments()
+
+	return exp
+}
+
+// 呼び出し式の引数のパース
+func (p *Parser) parseCallArguments() []ast.Expression {
+	args := []ast.Expression{}
+
+	// 引数なしの場合
+	if p.peekTokenIs(token.RPAREN) {
+		p.nextToken()
+		return args
+	}
+
+	p.nextToken()
+	args = append(args, p.parseExpression(LOWEST))
+
+	// 次のトークンがコンマの場合
+	for p.peekTokenIs(token.COMMA) {
+		// コンマの次までトークンを進める
+		p.nextToken()
+		p.nextToken()
+		args = append(args, p.parseExpression(LOWEST))
+	}
+
+	// 右かっこでない場合はnil
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+	return args
 }
