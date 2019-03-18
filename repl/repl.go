@@ -6,6 +6,7 @@ import (
 	"io"
 	"github.com/kakts/monkey/lexer"
 	"github.com/kakts/monkey/parser"
+	"github.com/kakts/monkey/evaluator"
 )
 
 // replの先頭文字
@@ -33,8 +34,11 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		io.WriteString(out, program.String())
-		io.WriteString(out, "\n")
+		evaluated := evaluator.Eval(program)
+		if evaluated != nil {
+			io.WriteString(out, evaluated.Inspect())
+			io.WriteString(out, "\n")
+		}
 	}
 }
 
