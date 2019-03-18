@@ -6,8 +6,9 @@ import (
 	"github.com/kakts/monkey/object"
 )
 
-// Object.Booolean値をあらかじめ生成して参照するようにする
+// Null Object.Booolean値をあらかじめ生成して参照するようにする
 var (
+	NULL = &object.Null{}
 	TRUE = &object.Boolean{Value: true}
 	FALSE = &object.Boolean{Value: false}
 )
@@ -23,6 +24,10 @@ func Eval(node ast.Node) object.Object {
 		// 式 再帰的に評価
 		fmt.Println("*ast.ExpressionStatement")
 		return Eval(node.Expression)
+	case *ast.PrefixExpression:
+		// 前置詞
+		right := Eval(node.Right)
+		return evalPrefixExpression(node.Operator, right)
 
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
@@ -50,4 +55,27 @@ func nativeBoolToBooleanObject(input bool) *object.Boolean {
 		return TRUE
 	}
 	return FALSE
+}
+
+func evalPrefixExpression(operator string, right object.Object) object.Object {
+	switch operator {
+	case "!":
+		return evalBangOperatorExpression(right)
+	default:
+		return NULL
+	}
+}
+
+// !前置詞を含む場合の評価
+func evalBangOperatorExpression(right object.Object) object.Object {
+	switch right {
+	case TRUE:
+		return FALSE
+	case FALSE:
+		return TRUE
+	case NULL:
+		return TRUE
+	default:
+		return FALSE
+	}
 }
