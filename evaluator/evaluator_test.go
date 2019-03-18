@@ -9,12 +9,15 @@ import (
 
 // Integerのみの場合そのままIntegerを返すかどうか
 func TestEvalIntegerExpression(t *testing.T) {
+	// - がサポートするオペランドは整数のみなので、このテストでチェクkする
 	tests := []struct {
 		input string
 		expected int64
 	}{
 		{"5", 5},
 		{"10", 10},
+		{"-5", -5},
+		{"-10", -10},
 	}
 
 	for _, tt := range tests {
