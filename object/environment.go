@@ -5,16 +5,30 @@ func NewEnvironment() *Environment {
 	return &Environment{store: s}
 }
 
+// outer 別の環境への参照を保持
+// つまり　拡張元の環境への参照を持てる
+// 内側のスコープで見つからない場合は、外側のスコープでそれを探す
+// 内側のスコープが外側のスコープを拡張する
 type Environment struct {
 	store map[string]Object
+	outer *Environment
 }
 
 func (e *Environment) Get(name string) (Object, bool) {
 	obj, ok := e.store[name]
+	if !ok && e.outer != nil {
+		obj, ok = e.outer.Get(name)
+	}
 	return obj, ok
 }
 
 func (e *Environment) Set(name string, val Object) Object {
 	e.store[name] = val
 	return val
+}
+
+func NewEnclosedEnvironment(outer *Environment) *Environment {
+	env := NewEnvironment()
+	env.outer = outer
+	return env
 }
