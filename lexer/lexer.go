@@ -128,6 +128,11 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.LBRACE, l.ch)
 	case '}':
 		tok = newToken(token.RBRACE, l.ch)
+	case '"':
+		// 文字列
+		tok.Type = token.STRING
+		// 次の '"'が現れるまでトークンを進めてその間の文字列を読み取る
+		tok.Literal = l.readString()
 	case 0:
 		// 終端として扱う
 		tok.Literal = ""
@@ -150,6 +155,18 @@ func (l *Lexer) NextToken() token.Token {
 
 	l.readChar()
 	return tok
+}
+
+func (l *Lexer) readString() string {
+	position := l.position + 1
+	for {
+		l.readChar()
+		if l.ch == '"' || l.ch == 0 {
+			break
+		}
+	}
+
+	return l.input[position:l.position]
 }
 
 func newToken(tokenType token.TokenType, ch byte) token.Token {
