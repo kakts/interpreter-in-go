@@ -18,6 +18,7 @@ const (
 	PRODUCT
 	PREFIX
 	CALL
+	INDEX // array[index]
 )
 
 // 演算子の優先順位テーブル
@@ -32,6 +33,7 @@ var precedences = map[token.TokenType]int {
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
 	token.LPAREN:   CALL,
+	token.LBRACKET: INDEX,
 }
 
 // 前置(prefix)と中置(infix)で異なる構文解析を定義する
@@ -95,6 +97,9 @@ func New(l *lexer.Lexer) *Parser {
 
 	// 関数の呼び出し式　add(2, 3)として　LPARENに対するinfixParseFnを登録する
 	p.registerInfix(token.LPAREN, p.parseCallExpression)
+
+	// 配列のインデックス"[" を中置演算子として扱う
+	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
 
 	// 2つのトークンを読み込む
 	p.nextToken()
@@ -548,4 +553,17 @@ func (p *Parser) parseExpressionList(end token.TokenType) []ast.Expression {
 	}
 
 	return list
+}
+
+func (p *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
+	exp := &ast.IndexExpression{Token: p.curToken, Left: left}
+
+	p.nextToken()
+	exp.Index = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.RBRACKET) {
+		return nil
+	}
+
+	return exp
 }
