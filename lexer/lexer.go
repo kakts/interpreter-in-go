@@ -137,6 +137,10 @@ func (l *Lexer) NextToken() token.Token {
 		// 終端として扱う
 		tok.Literal = ""
 		tok.Type = token.EOF
+	case '[':
+		tok = newToken(token.LBRACKET, l.ch)
+	case ']':
+		tok = newToken(token.RBRACKET, l.ch)
 	default:
 		// l.chが認識された文字でないときに識別子かどうかを点検する
 		if isLetter(l.ch) {
