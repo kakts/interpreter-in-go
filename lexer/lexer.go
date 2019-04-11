@@ -141,6 +141,8 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.LBRACKET, l.ch)
 	case ']':
 		tok = newToken(token.RBRACKET, l.ch)
+	case ':':
+		tok = newToken(token.COLON, l.ch)
 	default:
 		// l.chが認識された文字でないときに識別子かどうかを点検する
 		if isLetter(l.ch) {
