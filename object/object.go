@@ -21,6 +21,7 @@ const (
 	STRING_OBJ = "STRING"
 	BUILTIN_OBJ = "BUILTIN"
 	ARRAY_OBJ = "ARRAY"
+	HASH_OBJ = "HASH"
 )
 type Object interface {
 	Type() ObjectType
@@ -194,4 +195,38 @@ func (s *String) HashKey() HashKey {
 
 	// 異なる文字列に対して同じハッシュ値を生成する場合がある
 	return HashKey{Type: s.Type(), Value: h.Sum64()}
+}
+
+// key-valueのペア
+type HashPair struct {
+	Key Object
+	Value Object
+}
+
+type Hash struct {
+	Pairs map[HashKey]HashPair
+}
+
+func (h *Hash) Type() ObjectType {
+	return HASH_OBJ
+}
+
+func (h *Hash) Inspect() string {
+	var out bytes.Buffer
+
+	pairs := []string{}
+	for _, pair := range h.Pairs {
+		pairs = append(pairs, fmt.Sprintf("%s: %s", pair.Key.Inspect(), pair.Value.Inspect()))
+	}
+
+	out.WriteString("{")
+	out.WriteString(strings.Join(pairs, ", "))
+	out.WriteString("}")
+
+	return out.String()
+}
+
+// 与えられたオブジェクトがハッシュキーとして利用可能かチェックするためのインタフェース
+type Hashable interface {
+	HashKey() HashKey
 }
